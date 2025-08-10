@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# filepath: /home/hhlee/make_kat.py
 
 import re
 import sys

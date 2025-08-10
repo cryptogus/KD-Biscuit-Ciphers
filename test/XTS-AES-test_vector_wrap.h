@@ -1,8 +1,9 @@
 #pragma once
 
 #include "XTS-AES-test_vector.h"
+#include <stddef.h>
 
-struct Aes256Tv
+typedef struct
 {
     uint8_t* key;
     uint8_t* iv;
@@ -11,10 +12,10 @@ struct Aes256Tv
     uint32_t ptLen;
     uint8_t* ct;
     uint32_t ctLen;
-};
+} Aes256Tv;
 
-#define AES_256_TV(key, iv, pt, ct) \
-    {(uint8_t*)key, (uint8_t*)iv, sizeof(iv), (uint8_t*)pt, sizeof(pt), (uint8_t*)ct, sizeof(ct)}
+#define AES_256_TV(keys, ivs, pts, cts) \
+    {.key = (uint8_t*)keys, .iv = (uint8_t*)ivs, .ivLen = sizeof(ivs), .pt = (uint8_t*)pts, .ptLen = sizeof(pts), .ct = (uint8_t*)cts, .ctLen = sizeof(cts)}
 
 #define AES_256_TV_ENC_ENTRY(i) AES_256_TV(encrypt##i##Key, encrypt##i##I, encrypt##i##Pt, encrypt##i##Ct)
 #define AES_256_TV_DEC_ENTRY(i) AES_256_TV(decrypt##i##Key, decrypt##i##I, decrypt##i##Pt, decrypt##i##Ct)

@@ -21,13 +21,25 @@ void xts_aes_enc(void (*aes)(uint8_t*, uint8_t*, uint8_t*), uint8_t *tweak, uint
 {
     aes(tweak, tweak, key2);
     
-    for (int j = 0; j < (ptLen >> 4); j++) // block number
+    size_t lastBlockSize = ptLen % 16;
+    size_t leftBlockSize;
+    if (lastBlockSize == 0) 
     {
-        if (!(ptLen % 16 != 0 && j == (ptLen >> 4) - 1)) // last block
-        {
+        leftBlockSize = 0;
+    }
+    else
+    {
+        leftBlockSize = 16 - lastBlockSize;
+    }
+    for (int j = 0; j < ((ptLen + leftBlockSize)>> 4); j++) // block number
+    {
+        if (!(ptLen % 16 != 0 && j == ((ptLen + leftBlockSize) >> 4) - 1)) // last block
+        {   
+            //printf("\nBlock %d: ", j);
             for (int i = 0; i < 16; i++)
             {
                 pt[(j*16) + i] ^= tweak[i];
+                //printf("%02x ", pt[(j*16) + i]);
             }
             aes(ct + j*16, pt + j*16, key1);
 
@@ -35,33 +47,44 @@ void xts_aes_enc(void (*aes)(uint8_t*, uint8_t*, uint8_t*), uint8_t *tweak, uint
             for (size_t i = 0; i < 16; i++) {
                 ct[(j*16) + i] ^= tweak[i];
             }
-
+            
             // Update the tweak for the next block
             xts_gf_mul(tweak);
         }
     }
+    
     uint8_t pt_tmp[16] = {0,};
     uint8_t ct_tmp[16] = {0,};
-
+    
     if (ptLen % 16 != 0) // last block
-    {
-        size_t lastBlockSize = ptLen % 16;
+     {
         for (size_t i = 0; i < lastBlockSize; i++)
         {
-            pt[((ptLen >> 4) - 1) * 16 + i] ^= tweak[i];
+            pt[(ptLen >> 4) * 16 + i] ^= tweak[i];
         }
-        memcpy(ct_tmp, ct + ((ptLen >> 4) - 2)* 16 + lastBlockSize, 16 - lastBlockSize);
-        for (size_t i = 0; i < 16 - lastBlockSize; i++)
+        memcpy(ct_tmp, ct + ((ptLen >> 4) - 1)* 16, leftBlockSize);
+        for (size_t i = 0; i < leftBlockSize; i++)
         {
             ct_tmp[i] ^= tweak[i + lastBlockSize];
         }
-        memcpy(pt_tmp, pt + ((ptLen >> 4) - 1) * 16, lastBlockSize);
-        memcpy(pt_tmp, ct_tmp, 16 - lastBlockSize);
-        aes(ct + ((ptLen >> 4) - 1), pt_tmp, key1);
+        memcpy(pt_tmp, pt + ((ptLen >> 4) * 16), lastBlockSize);
+        memcpy(pt_tmp + lastBlockSize, ct_tmp, leftBlockSize);
+        aes(ct + ((ptLen >> 4) * 16), pt_tmp, key1);
 
         // XOR the ciphertext with the tweak
-        for (size_t i = 0; i < 16; i++) {
-            ct[((ptLen >> 4) - 1) * 16 + i] ^= tweak[i];
+        for (size_t i = 0; i < 16; i++) 
+        {
+            ct[(ptLen >> 4) * 16 + i] ^= tweak[i];
+        }
+
+        memcpy(ct_tmp, ct + (ptLen >> 4) * 16, 16);
+        for (size_t i = 0; i < lastBlockSize; i++) 
+        {
+            ct[(ptLen >> 4) * 16 + i] = ct[((ptLen >> 4) - 1) * 16 + i];
+        }
+        for (size_t i = 0; i < 16; i++) 
+        {
+            ct[((ptLen >> 4) - 1) * 16 + i] = ct_tmp[i];
         }
     }
 }
@@ -72,7 +95,7 @@ static void xts_aes_enc_test(Aes256Tv *tv)
     uint8_t tweak[16] = {0,};
     for (int i = 0; i < ENCRYPT_TEST_COUNT; i++)
     {
-        uint8_t ciphertext[64];
+        uint8_t ciphertext[128] = {0,};
         xts_aes_enc(AES256_Encrypt, tv[i].iv, tv[i].key, tv[i].key + 32, tv[i].pt, tv[i].ptLen, ciphertext);
         if (memcmp(ciphertext, tv[i].ct, tv[i].ptLen) != 0)
         {

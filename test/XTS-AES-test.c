@@ -21,21 +21,24 @@ void xts_aes_enc(void (*aes)(uint8_t*, uint8_t*, uint8_t*), uint8_t *tweak, uint
 {
     aes(tweak, tweak, key2);
     
-    for (int j = 0; j < (ptLen >> 4) - 1; j++) // block number
+    for (int j = 0; j < (ptLen >> 4); j++) // block number
     {
-        for (int i = 0; i < 16; i++)
+        if (!(ptLen % 16 != 0 && j == (ptLen >> 4) - 1)) // last block
         {
-            pt[(j*16) + i] ^= tweak[i];
-        }
-        aes(ct + j*16, pt, key1);
+            for (int i = 0; i < 16; i++)
+            {
+                pt[(j*16) + i] ^= tweak[i];
+            }
+            aes(ct + j*16, pt + j*16, key1);
 
-        // XOR the ciphertext with the tweak
-        for (size_t i = 0; i < 16; i++) {
-            ct[(j*16) + i] ^= tweak[i];
-        }
+            // XOR the ciphertext with the tweak
+            for (size_t i = 0; i < 16; i++) {
+                ct[(j*16) + i] ^= tweak[i];
+            }
 
-        // Update the tweak for the next block
-        xts_gf_mul(tweak);
+            // Update the tweak for the next block
+            xts_gf_mul(tweak);
+        }
     }
     uint8_t pt_tmp[16] = {0,};
     uint8_t ct_tmp[16] = {0,};
@@ -78,7 +81,7 @@ static void xts_aes_enc_test(Aes256Tv *tv)
             for (int j = 0; j < tv[i].ptLen; j++) {
                 printf("%02x", tv[i].ct[j]);
             }
-            printf("\nGot: ");
+            printf("\nGot:      ");
             for (int j = 0; j < tv[i].ptLen; j++) {
                 printf("%02x", ciphertext[j]);
             }

@@ -1,6 +1,15 @@
 // Generated from CAVS test vectors
 #include <stdint.h>
 
+// Test case counts
+#define ENCRYPT_TEST_COUNT 500
+#define DECRYPT_TEST_COUNT 500
+#define TOTAL_TEST_COUNT 1000
+
+const uint32_t encryptTestCount = 500;
+const uint32_t decryptTestCount = 500;
+const uint32_t totalTestCount = 1000;
+
 // === ENCRYPT MODE ===
 // Test Case 0
 uint8_t encrypt0Key[64] = {
@@ -19802,12 +19811,3 @@ uint8_t decrypt499Ct[48] = {
     0xe2, 0xba, 0x9c, 0x0b, 0x96, 0x7a, 0x9f, 0x01, 0x67, 0x70, 0x0b, 0x04, 0x35, 0x25, 0xa4, 0x7b,
     0xaf, 0xe7, 0xd6, 0x30, 0x77, 0x4e, 0xaf, 0x4a, 0x1d, 0xc9, 0xfb, 0xcf, 0x94, 0xa1, 0xfd, 0xa4
 };
-
-// Test case counts
-#define ENCRYPT_TEST_COUNT 500
-#define DECRYPT_TEST_COUNT 500
-#define TOTAL_TEST_COUNT 1000
-
-const uint32_t encryptTestCount = 500;
-const uint32_t decryptTestCount = 500;
-const uint32_t totalTestCount = 1000;

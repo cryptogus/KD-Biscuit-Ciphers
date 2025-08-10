@@ -1,6 +1,6 @@
 #pragma once
 
-#include "xts_aes_256_tv.hpp"
+#include "XTS-AES-test_vector.h"
 
 struct Aes256Tv
 {

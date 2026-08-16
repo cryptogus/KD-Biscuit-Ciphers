@@ -20,10 +20,10 @@ static void xts_gf_mul(uint8_t *tweak) {
 void xts_aes_enc(void (*aes)(uint8_t*, uint8_t*, uint8_t*), uint8_t *tweak, uint8_t *key1, uint8_t *key2, uint8_t *pt, size_t ptLen, uint8_t *ct)
 {
     aes(tweak, tweak, key2);
-    
+
     size_t lastBlockSize = ptLen % 16;
     size_t leftBlockSize;
-    if (lastBlockSize == 0) 
+    if (lastBlockSize == 0)
     {
         leftBlockSize = 0;
     }
@@ -34,7 +34,7 @@ void xts_aes_enc(void (*aes)(uint8_t*, uint8_t*, uint8_t*), uint8_t *tweak, uint
     for (int j = 0; j < ((ptLen + leftBlockSize)>> 4); j++) // block number
     {
         if (!(ptLen % 16 != 0 && j == ((ptLen + leftBlockSize) >> 4) - 1)) // last block
-        {   
+        {
             //printf("\nBlock %d: ", j);
             for (int i = 0; i < 16; i++)
             {
@@ -47,16 +47,16 @@ void xts_aes_enc(void (*aes)(uint8_t*, uint8_t*, uint8_t*), uint8_t *tweak, uint
             for (size_t i = 0; i < 16; i++) {
                 ct[(j*16) + i] ^= tweak[i];
             }
-            
+
             // Update the tweak for the next block
             xts_gf_mul(tweak);
         }
     }
-    
+
     uint8_t pt_tmp[16] = {0,};
     uint8_t ct_tmp[16] = {0,};
     uint8_t ct_tmp2[16] = {0,};
-    
+
     if (ptLen % 16 != 0) // last block
      {
         for (size_t i = 0; i < lastBlockSize; i++)
@@ -74,16 +74,16 @@ void xts_aes_enc(void (*aes)(uint8_t*, uint8_t*, uint8_t*), uint8_t *tweak, uint
         aes(ct_tmp, pt_tmp, key1);
 
         // XOR the ciphertext with the tweak
-        for (size_t i = 0; i < 16; i++) 
+        for (size_t i = 0; i < 16; i++)
         {
             ct_tmp[i] ^= tweak[i];
         }
 
-        for (size_t i = 0; i < leftBlockSize; i++) 
+        for (size_t i = 0; i < leftBlockSize; i++)
         {
             ct[(ptLen >> 4) * 16 + i] = ct[((ptLen >> 4) - 1) * 16 + i];
         }
-        for (size_t i = 0; i < 16; i++) 
+        for (size_t i = 0; i < 16; i++)
         {
             ct[((ptLen >> 4) - 1) * 16 + i] = ct_tmp[i];
         }
